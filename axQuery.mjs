@@ -331,7 +331,7 @@ export default class AxQuery {
                 if (!e[_changed_] && e.matches(selector)) {
                     if (["style", "class", "id"].indexOf(mutation??key) < 0 && (mutation ? (key == mutation) : true) && !key.startsWith('aq-')) {
                         //await Timer.raf;
-                        e[_changed_] = true; value(e, I); e[_changed_] = false;
+                        e[_changed_] = true; await value(e, I); e[_changed_] = false;
                     }
                     //this.#listenAttributes(e, selector);
                 }
