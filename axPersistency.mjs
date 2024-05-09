@@ -33,6 +33,59 @@ export default class AxPersistency {
         });
     }
 
+    // svelte specific (TODO: weak ref support)
+    makeWritable(name, base = null) {
+        const unit = base ?? {[name]: null};
+        const subs = new Set([]);
+        this.synchronizeWith(unit);
+
+        //
+        return {
+            set: (value)=>{
+                unit[name] = value;
+                Array.from(subs.values()).forEach((cb)=>cb(value));
+            },
+            update: (fx)=>{
+                const value = fx(unit[name]);
+                unit[name] = value;
+                Array.from(subs.values()).forEach((cb)=>cb(value));
+            },
+            ubsubscribe: (fx)=>{
+                subs.delete(fx);
+            },
+            subscribe: (fx)=>{
+                subs.add(fx);
+            }
+        }
+    }
+
+    // svelte specific (TODO: weak ref support)
+    makeReadable(name, base = null) {
+        const unit = base ?? {[name]: null};
+        const subs = new Set([]);
+        this.synchronizeWith(unit);
+
+        //
+        return {
+            get: ()=>{
+                const value = unit[name];
+                Array.from(subs.values()).forEach((cb)=>cb(value));
+                return value;
+            },
+            update: (fx)=>{
+                const value = fx(unit[name]);
+                unit[name] = value;
+                Array.from(subs.values()).forEach((cb)=>cb(value));
+            },
+            ubsubscribe: (fx)=>{
+                subs.delete(fx);
+            },
+            subscribe: (fx)=>{
+                subs.add(fx);
+            }
+        }
+    }
+
     //
     getFromStorage(name) {
         const act = this.#names.get(name);
