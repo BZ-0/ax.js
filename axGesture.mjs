@@ -135,7 +135,7 @@ export default class AxGesture {
 
         //
         const inPlace = ()=>{
-            return Math.hypot(...action.lastCoord.map((n,i)=>((action?.pageCoord?.[i]||0)-n))) <= (options?.maxOffsetRadius ?? 10)
+            return (Math.hypot(...action.lastCoord.map((n,i)=>((action?.pageCoord?.[i]||0)-n))) / AQ.pixelRatio) <= (options?.maxOffsetRadius ?? 10);
         }
 
         //
