@@ -72,10 +72,10 @@ export default class AxGesture {
                 if (swipes.has(ev.pointerId)) {
                     const swipe = swipes.get(ev.pointerId);
                     const diffP = [ev.pageX, swipe.current[0], ev.pageY - swipe.current[1]];
-                    const diffT = (performance.now() - swipe.time) / 1000.0;
+                    const diffT = (performance.now() - swipe.time);
 
                     //
-                    const speed = Math.hypot(...diffP) / diffT;
+                    const speed = Math.hypot(...diffP) / AQ.pixelRatio / diffT;
 
                     //
                     Object.assign(swipe, {
@@ -96,7 +96,7 @@ export default class AxGesture {
             const comleteSwipe = (pointerId)=>{
                 if (swipes.has(pointerId)) {
                     const swipe = swipes.get(pointerId);
-                    if (swipe.speed > (options.threshold || 100)) {
+                    if (swipe.speed > (options.threshold || 50)) {
                         const swipeAngle = Math.atan2((swipe.current[1] - swipe.start[1]), (swipe.current[0] - swipe.start[0]));
                         swipe.swipeAngle = swipeAngle;
                         swipe.direction = "name";
