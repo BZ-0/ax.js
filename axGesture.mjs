@@ -96,7 +96,7 @@ export default class AxGesture {
             const comleteSwipe = (pointerId)=>{
                 if (swipes.has(pointerId)) {
                     const swipe = swipes.get(pointerId);
-                    if (swipe.speed > (options.threshold || 50)) {
+                    if (swipe.speed > (options.threshold || 100)) {
                         const swipeAngle = Math.atan2((swipe.current[1] - swipe.start[1]), (swipe.current[0] - swipe.start[0]));
                         swipe.swipeAngle = swipeAngle;
                         swipe.direction = "name";
