@@ -42,6 +42,105 @@ export default class AxGesture {
         }, 100);
     }
 
+
+    //
+    swipe(options) {
+        if (options?.handler) {
+
+            //
+            const swipes = new Map([
+
+            ]);
+
+            //
+            options?.handler?.addEventListener("pointerdown", (ev)=>{
+                if (ev.target == options?.handler) {
+                    swipes.set(ev.pointerId, {
+                        target: ev.target,
+                        start: [ev.pageX, ev.pageY],
+                        current: [ev.pageX, ev.pageY],
+                        pointerId: ev.pointerId,
+                        startTime: performance.now(),
+                        time: performance.now(),
+                        speed: 0
+                    });
+                }
+            });
+
+            //
+            const registerMove = (ev)=>{
+                if (swipes.has(ev.pointerId)) {
+                    const swipe = swipes.get(ev.pointerId);
+                    const diffP = [ev.pageX, swipe.current[0], ev.pageY - swipe.current[1]];
+                    const diffT = (performance.now() - swipe.time) / 1000.0;
+
+                    //
+                    const speed = Math.hypot(...diffP) / diffT;
+
+                    //
+                    Object.assign(swipe, {
+                        speed: (swipe.speed == 0 ? speed : (speed * 0.8 + swipe.speed * 0.2)),
+                        current: [ev.pageX, ev.pageY],
+                        pointerId: ev.pointerId,
+                        time: performance.now()
+                    });
+                }
+            }
+
+            //
+            const compAngle = (a, c)=>{
+                return (a-c+540) % 360 - 180;
+            }
+
+            //
+            const comleteSwipe = (pointerId)=>{
+                if (swipes.has(pointerId)) {
+                    const swipe = swipes.get(pointerId);
+                    if (swipe.speed > (options.threshold || 50)) {
+                        const swipeAngle = Math.atan2((swipe.current[1] - swipe.start[1]), (swipe.current[0] - swipe.start[0]));
+                        swipe.swipeAngle = swipeAngle;
+                        swipe.direction = "name";
+
+                        //
+                        if (Math.abs(compAngle(swipe.swipeAngle * (180 / Math.PI), 0)) <= 20) {
+                            //AR.get(el.getAttribute("data-swipe-action-left"))?.(el);
+                            swipe.direction = "left";
+                        }
+
+                        if (Math.abs(compAngle(swipe.swipeAngle * (180 / Math.PI), 180)) <= 20) {
+                            //AR.get(el.getAttribute("data-swipe-action-right"))?.(el);
+                            swipe.direction = "right";
+                        }
+
+                        if (Math.abs(compAngle(swipe.swipeAngle * (180 / Math.PI), 270)) <= 20) {
+                            //AR.get(el.getAttribute("data-swipe-action-up"))?.(el);
+                            swipe.direction = "up";
+                        }
+
+                        if (Math.abs(compAngle(swipe.swipeAngle * (180 / Math.PI), 90)) <= 20) {
+                            //AR.get(el.getAttribute("data-swipe-action-down"))?.(el);
+                            swipe.direction = "down";
+                        }
+
+                        options?.trigger?.(swipe);
+                    }
+                    swipes.delete(pointerId);
+                }
+            }
+
+            //
+            document.addEventListener("pointermove", registerMove, {capture: true});
+            document.addEventListener("pointerup", (ev)=>comleteSwipe(ev.pointerId), {capture: true});
+            document.addEventListener("pointercancel", (ev)=>comleteSwipe(ev.pointerId), {capture: true});
+
+        }
+
+
+    }
+
+
+
+
     //
     limitDrag(status, holder, container) {
         const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container) || [0, 0];
