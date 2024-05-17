@@ -71,15 +71,15 @@ export default class AxGesture {
             const registerMove = (ev)=>{
                 if (swipes.has(ev.pointerId)) {
                     const swipe = swipes.get(ev.pointerId);
-                    const diffP = [ev.pageX, swipe.current[0], ev.pageY - swipe.current[1]];
-                    const diffT = (performance.now() - swipe.time);
+                    //const diffP = [ev.pageX - swipe.current[0], ev.pageY - swipe.current[1]];
+                    //const diffT = (performance.now() - swipe.time);
 
                     //
-                    const speed = Math.hypot(...diffP) / AQ.pixelRatio / diffT;
+                    //const speed = Math.hypot(...diffP) / AQ.pixelRatio / diffT;
 
                     //
                     Object.assign(swipe, {
-                        speed: (swipe.speed == 0 ? speed : (speed * 0.8 + swipe.speed * 0.2)),
+                        //speed: (swipe.speed == 0 ? speed : (speed * 0.8 + swipe.speed * 0.2)),
                         current: [ev.pageX, ev.pageY],
                         pointerId: ev.pointerId,
                         time: performance.now()
@@ -96,7 +96,15 @@ export default class AxGesture {
             const comleteSwipe = (pointerId)=>{
                 if (swipes.has(pointerId)) {
                     const swipe = swipes.get(pointerId);
-                    if (swipe.speed > (options.threshold || 50)) {
+                    const diffP = [swipe.start[0] - swipe.current[0], swipe.start[1] - swipe.current[1]];
+                    const diffT = (performance.now() - swipe.startTime);
+
+                    //
+                    const speed = Math.hypot(...diffP) / AQ.pixelRatio / diffT;
+                    swipe.speed = speed;
+
+                    //
+                    if (swipe.speed > (options.threshold || 0.5)) {
                         const swipeAngle = Math.atan2((swipe.current[1] - swipe.start[1]), (swipe.current[0] - swipe.start[0]));
                         swipe.swipeAngle = swipeAngle;
                         swipe.direction = "name";
