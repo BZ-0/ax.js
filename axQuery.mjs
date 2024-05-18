@@ -91,12 +91,12 @@ export default class AxQuery {
     #domListener = new Map([]);
 
     //
-    movementX(pointerId = 0) { return (movement[pointerId]?.x||0) * this.pixelRatio; };
-    movementY(pointerId = 0) { return (movement[pointerId]?.y||0) * this.pixelRatio; };
+    movementX(pointerId = 0) { return (movement[pointerId]?.x||0); };
+    movementY(pointerId = 0) { return (movement[pointerId]?.y||0); };
 
     //
-    static movementX(pointerId = 0) { return (movement[pointerId]?.x||0) * this.pixelRatio; };
-    static movementY(pointerId = 0) { return (movement[pointerId]?.y||0) * this.pixelRatio; };
+    static movementX(pointerId = 0) { return (movement[pointerId]?.x||0); };
+    static movementY(pointerId = 0) { return (movement[pointerId]?.y||0); };
 
     //
     get pixelRatio() {
