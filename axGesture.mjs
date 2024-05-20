@@ -191,7 +191,6 @@ export default class AxGesture {
             }
         }, { capture: true, passive: false}]
 
-        // TODO: draggable library
         handler.addEventListener("pointerdown", (ev)=>{
             if (status.pointerId < 0 && window.matchMedia("(width >= 10in)").matches) {
                 status.pointerId = ev.pointerId;
