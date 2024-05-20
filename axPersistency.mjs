@@ -7,16 +7,18 @@ export default class AxPersistency {
     #names = new Map([]);
     #namespace = "psx";
     #smap = new WeakMap();
+    #tmp = {};
 
     //
     constructor(namespace = "psx", names = []){
         this.#names = new Map(names);
         this.#namespace = namespace;
+        this.#tmp = {};
     }
 
     //
     synchronizeWith(obj) {
-        const tmp = {};
+        const tmp = this.#tmp || {};
         const self = this;
         this.#smap.set(obj, tmp);
         Array.from(this.#names.entries()).forEach(([n, act])=>{
