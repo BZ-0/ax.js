@@ -2,8 +2,8 @@ const $get = Symbol("get");
 const $set = Symbol("set");
 const $initialize = Symbol("initialize");
 
-//
-export default class AxPersistency {
+
+class AxPersistency {
     #names = new Map([]);
     #namespace = "psx";
     #smap = new WeakMap();
@@ -165,3 +165,16 @@ export default class AxPersistency {
         return null;
     }
 }
+
+//
+const proxy = new Proxy(AxPersistency, Object.assign({}, Reflect, {
+    construct(target, args) {
+        return new target(...args);
+    },
+    apply(target, args) {
+        return {};
+    }
+}));
+
+//
+export default proxy
