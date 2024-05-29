@@ -53,22 +53,22 @@ export class DynamicHandler {
 }
 
 //
-const movement = {};
-const screen = {};
+const movement = new Map([]);
+const screen = new Map([]);
 
 //
 const registerMove = (e)=>{
-    movement[e.pointerId] = {
-        x: e.pageX - (screen[e.pointerId]?.x ?? e.pageX),
-        y: e.pageY - (screen[e.pointerId]?.y ?? e.pageY),
-    };
-    screen[e.pointerId] = {x: e.pageX, y: e.pageY};
+    movement.set(e.pointerId, {
+        x: e.pageX - (screen.get(e.pointerId)?.x ?? e.pageX),
+        y: e.pageY - (screen.get(e.pointerId)?.y ?? e.pageY),
+    });
+    screen.set(e.pointerId, {x: e.pageX, y: e.pageY});
 }
 
 //
 const removePointer = (e)=>{
-    delete movement[e.pointerId];
-    delete screen[e.pointerId];
+    movement.delete(e.pointerId);
+    screen.delete(e.pointerId);
 };
 
 //
@@ -91,12 +91,12 @@ export default class AxQuery {
     #domListener = new Map([]);
 
     //
-    movementX(pointerId = 0) { return (movement[pointerId]?.x||0); };
-    movementY(pointerId = 0) { return (movement[pointerId]?.y||0); };
+    movementX(pointerId = 0) { return (movement.get(pointerId)?.x||0); };
+    movementY(pointerId = 0) { return (movement.get(pointerId)?.y||0); };
 
     //
-    static movementX(pointerId = 0) { return (movement[pointerId]?.x||0); };
-    static movementY(pointerId = 0) { return (movement[pointerId]?.y||0); };
+    static movementX(pointerId = 0) { return (movement.get(pointerId)?.x||0); };
+    static movementY(pointerId = 0) { return (movement.get(pointerId)?.y||0); };
 
     //
     get pixelRatio() {
