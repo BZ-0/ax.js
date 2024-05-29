@@ -1,5 +1,5 @@
 export default class State {
-    static $story = new Set();
+    static $story = new Array();
 
     //
     constructor() {
@@ -8,17 +8,23 @@ export default class State {
 
     //
     static pushState(obj, href) {
-        const prevState = this.$story.size > 0 ? this.$story.get(this.$story.size-1) : null;
+        if (location.hash == href) return;
 
         //
-        const state = [obj, "", location.hash = href];
+        const prevState = this.$story.at(this.$story.length-1) ?? null;
+        const state = [obj, "", href];
         history.pushState(...state);
-        this.$story.add(state);
+        this.$story.push(state);
 
         //
-        const event = new CustomEvent("mx-push-state", { detail: {
+        window.dispatchEvent(new CustomEvent("mx-push-state", { detail: {
             prevState, state
-        } });
+        } }));
+
+        //
+        window.dispatchEvent(new CustomEvent("mx-change-state", { detail: {
+            prevState, state
+        } }));
     }
 
     //
@@ -29,13 +35,32 @@ export default class State {
 
     //
     static back() {
-        const prevState = this.$story.size > 0 ? this.$story.get(this.$story.size-1) : null;
-        history.back();this.$story.remove(this.$story.size-1);
-        const state = this.$story.get(this.$story.size-1);
+        const prevState = this.$story.at(this.$story.length-1) ?? null;
+        history.back(); this.$story.pop();
+        const state = this.$story.at(this.$story.length-1) ?? null;
 
         //
-        const event = new CustomEvent("mx-pop-state", { detail: {
+        window.dispatchEvent(new CustomEvent("mx-pop-state", { detail: {
             prevState, state
-        } });
+        } }));
+
+        //
+        window.dispatchEvent(new CustomEvent("mx-change-state", { detail: {
+            prevState, state
+        } }));
     }
 }
+
+//
+addEventListener("popstate", (e)=>{
+    const prevState = State.$story.at(State.$story.length-1) ?? null;
+    State.$story.pop();
+    const state = State.$story.at(State.$story.length-1) ?? null;
+    window.dispatchEvent(new CustomEvent("mx-pop-state", { detail: {
+        prevState, state
+    } }));
+
+    window.dispatchEvent(new CustomEvent("mx-change-state", { detail: {
+        prevState, state
+    } }));
+});
