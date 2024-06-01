@@ -77,10 +77,13 @@ document.addEventListener("pointermove", registerMove, {capture: true, passive: 
 document.addEventListener("pointerup", removePointer, {capture: true, passive: true});
 document.addEventListener("pointercancel", removePointer, {capture: true, passive: true});
 
-
 //
 const _changed_ = Symbol("changed");
 const _bound_ = Symbol("bound");
+
+//
+const styleElement = document.createElement("style");
+document.querySelector("head").appendChild(styleElement);
 
 //
 export default class AxQuery {
@@ -505,6 +508,27 @@ export default class AxQuery {
                 document.addEventListener('readystatechange', (e)=>resolveOf(x), { once: false, passive: true });
             }
         });
+    }
+
+    //
+    static setStyleRule(selector, sheet) {
+        const styleRules = styleElement.sheet;
+        let ruleId = Array.from(styleRules?.cssRules || []).findIndex(({selectorText})=>(selector == selectorText));
+        if (ruleId <= -1) { ruleId = styleRules.insertRule(`${selector} {}`); }
+
+        //
+        const rule = styleElement.sheet.cssRules[ruleId];
+        Object.entries(sheet).map(([propName, propValue])=>{
+            const exists = rule.style.getPropertyValue(propName);
+            if (!exists || exists != propValue) {
+                rule.style.setProperty(propName, propValue, "");
+            }
+        });
+    }
+
+    //
+    static setStyleRules(classes) {
+        return classes?.map?.((args)=>this.setStyleRule(...args));
     }
 
     //
