@@ -532,6 +532,10 @@ export default class AxQuery {
     }
 
     //
+    setStyleRules(...args) { return AxQuery.setStyleRules(...args); }
+    setStyleRule(...args) { return AxQuery.setStyleRule(...args); }
+
+    //
     dynamic(s, i = 0) {
         return new Proxy(this.ROOT, new DynamicHandler(s, i));
     }
