@@ -418,7 +418,7 @@ export default class AxQuery {
 
     // more agressive events type, based on capture or delegation
     // bindings to root element, not on every selected elements
-    propogated(selector, args) {
+    propagated(selector, args) {
         const dynamic = this.dynamic(selector);
         this.ROOT.addEventListener(args[0], async ($e)=>{
             const e = $e.clientX == null && $e.clientY == null && $e.detail ? $e.detail : $e;
