@@ -154,12 +154,12 @@ export default class AxGesture {
         const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container, status.translate) || [0, 0];
 
         // if centered
-        status.translate[0] = clamp(0, status.translate[0], widthDiff);
-        status.translate[1] = clamp(0, status.translate[1], heightDiff);
+        status.realTranslate[0] = clamp(0, status.translate[0], widthDiff);
+        status.realTranslate[1] = clamp(0, status.translate[1], heightDiff);
 
         //
-        this.propFloat("--rsx", status.translate[0]);
-        this.propFloat("--rsy", status.translate[1]);
+        this.propFloat("--rsx", status.realTranslate[0]);
+        this.propFloat("--rsy", status.realTranslate[1]);
 
         // if top-left aligned
         //status.translate[0] = clamp(0, status.translate[0], widthDiff );
@@ -172,15 +172,15 @@ export default class AxGesture {
         const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container) || [0, 0];
 
         // if centered
-        status.translate[0] = clamp(-widthDiff *0.5, status.translate[0], widthDiff *0.5);
-        status.translate[1] = clamp(-heightDiff*0.5, status.translate[1], heightDiff*0.5);
+        status.realTranslate[0] = clamp(-widthDiff *0.5, status.translate[0], widthDiff *0.5);
+        status.realTranslate[1] = clamp(-heightDiff*0.5, status.translate[1], heightDiff*0.5);
 
         // if top-left aligned
         //status.translate[0] = clamp(0, status.translate[0], widthDiff );
         //status.translate[1] = clamp(0, status.translate[1], heightDiff);
 
-        this.propFloat("--rx", status.translate[0]);
-        this.propFloat("--ry", status.translate[1]);
+        this.propFloat("--rx", status.realTranslate[0]);
+        this.propFloat("--ry", status.realTranslate[1]);
     }
 
 
@@ -189,13 +189,19 @@ export default class AxGesture {
         const handler = options.handler ?? this.#holder;
         const status = {
             pointerId: -1,
+            realTranslate: [
+                this.propGet("--rsx") || 0,
+                this.propGet("--rsy") || 0,
+            ],
             translate: [
-                // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsx"))??0),
-                // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsy"))??0)
+                this.propGet("--rsx") || 0,
+                this.propGet("--rsy") || 0,
             ]
         }
+
+        //
+        this.propFloat("--rsx", status.realTranslate[0] || 0);
+        this.propFloat("--rsy", status.realTranslate[1] || 0);
 
         //
         this.#resizeStatus = status;
@@ -209,7 +215,7 @@ export default class AxGesture {
                 ]
 
                 //
-                const previous = [...status.translate];
+                const previous = [...status.realTranslate];
 
                 //
                 status.translate[0] += diff[0];
@@ -217,8 +223,10 @@ export default class AxGesture {
                 this.limitResize(status, this.#holder, this.#holder.parentNode);
 
                 //
-                this.#dragStatus.translate[0] += (status.translate[0]-previous[0])/2;
-                this.#dragStatus.translate[1] += (status.translate[1]-previous[1])/2;
+                this.#dragStatus.translate[0] += (status.realTranslate[0]-previous[0])/2;
+                this.#dragStatus.translate[1] += (status.realTranslate[1]-previous[1])/2;
+
+                //
                 this.limitDrag(this.#dragStatus, this.#holder, this.#holder.parentNode);
             }
         }, { capture: true, passive: false }];
@@ -239,10 +247,11 @@ export default class AxGesture {
             if (status.pointerId < 0) {
                 status.pointerId = ev.pointerId
 
-                // @ts-ignore
-                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsx"))||status.translate[0]||0),
-                // @ts-ignore
-                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsy"))||status.translate[1]||0)
+                //
+                status.translate[0] = (this.propGet("--rsx")??status.realTranslate[0])||0;
+                status.translate[1] = (this.propGet("--rsy")??status.realTranslate[1])||0;
+                status.realTranslate[0] = status.translate[0];
+                status.realTranslate[1] = status.translate[1];
 
                 //
                 document.addEventListener('pointermove', ...dragMove)
@@ -252,20 +261,24 @@ export default class AxGesture {
         }, { capture: false, passive: false });
     }
 
-
-
     //
     draggable(options) {
         const handler = options.handler ?? this.#holder;
         const status = {
             pointerId: -1,
+            realTranslate: [
+                this.propGet("--rx") || 0,
+                this.propGet("--ry") || 0,
+            ],
             translate: [
-                // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))||0),
-                // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))||0)
+                this.propGet("--rx") || 0,
+                this.propGet("--ry") || 0,
             ]
         }
+
+        //
+        this.propFloat("--rx", status.realTranslate[0] || 0);
+        this.propFloat("--ry", status.realTranslate[1] || 0);
 
         //
         this.#dragStatus = status;
@@ -275,7 +288,6 @@ export default class AxGesture {
             if (status.pointerId == ev.pointerId) {
                 status.translate[0] += AQ.movementX(ev.pointerId);
                 status.translate[1] += AQ.movementY(ev.pointerId);
-
                 this.limitDrag(status, this.#holder, this.#holder.parentNode);
             }
         }, { capture: true, passive: false }];
@@ -296,10 +308,11 @@ export default class AxGesture {
             if (status.pointerId < 0) {
                 status.pointerId = ev.pointerId
 
-                // @ts-ignore
-                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))||status.translate[0]||0),
-                // @ts-ignore
-                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))||status.translate[1]||0)
+                //
+                status.translate[0] = (this.propGet("--rx")??status.realTranslate[0])||0,
+                status.translate[1] = (this.propGet("--ry")??status.realTranslate[1])||0
+                status.realTranslate[0] = status.translate[0];
+                status.realTranslate[1] = status.translate[1];
 
                 //
                 document.addEventListener('pointermove', ...dragMove)
@@ -307,6 +320,13 @@ export default class AxGesture {
                 document.addEventListener('pointercancel', ...dragEnd)
             }
         }, { capture: false, passive: false });
+    }
+
+    //
+    propGet(name) {
+        const prop = this.#holder.style.getPropertyValue(name)
+        const num = (prop != null && prop != "") ? (parseFloat(prop)||0) : null;
+        return num || null;
     }
 
     //
