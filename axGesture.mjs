@@ -153,9 +153,15 @@ export default class AxGesture {
     limitDrag(status, holder, container) {
         const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container) || [0, 0];
 
+        //
+        const [shiftX, shiftY] = [
+            (parseFloat(holder.style.getPropertyValue("--rsx"))||0)*0.5,
+            (parseFloat(holder.style.getPropertyValue("--rsy"))||0)*0.5
+        ]
+
         // if centered
-        status.translate[0] = clamp(-widthDiff *0.5, status.translate[0], widthDiff *0.5);
-        status.translate[1] = clamp(-heightDiff*0.5, status.translate[1], heightDiff*0.5);
+        status.translate[0] = clamp(-widthDiff *0.5, status.translate[0] + shiftX, widthDiff *0.5) - shiftX;
+        status.translate[1] = clamp(-heightDiff*0.5, status.translate[1] + shiftY, heightDiff*0.5) - shiftY;
 
         // if top-left aligned
         //status.translate[0] = clamp(0, status.translate[0], widthDiff );
@@ -167,7 +173,12 @@ export default class AxGesture {
         const handler = options.handler ?? this.#holder;
         const status = {
             pointerId: -1,
-            translate: [0, 0]
+            translate: [
+                // @ts-ignore
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))??0),
+                // @ts-ignore
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))??0)
+            ]
         }
 
         //
@@ -194,6 +205,11 @@ export default class AxGesture {
         handler.addEventListener("pointerdown", (ev)=>{
             if (status.pointerId < 0) {
                 status.pointerId = ev.pointerId
+
+                // @ts-ignore
+                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))??status.translate[0]),
+                // @ts-ignore
+                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))??status.translate[1])
 
                 //
                 document.addEventListener('pointermove', ...dragMove)
