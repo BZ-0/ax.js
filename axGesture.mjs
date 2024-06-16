@@ -31,13 +31,15 @@ const tpm = (callback = ()=>{}, timeout = 1000)=>{
 export default class AxGesture {
     #holder = null;
     #getSizeDiff = ()=>{};
+    #dragStatus = {};
+    #resizeStatus = {};
 
     //
     constructor(holder) {
         this.#holder = holder;
-        this.#getSizeDiff = Timer.cached((holder, container)=>{
-            const widthDiff  = container.clientWidth  - holder.offsetWidth;
-            const heightDiff = container.clientHeight - holder.offsetHeight;
+        this.#getSizeDiff = Timer.cached((holder, container, shifting = [0, 0])=>{
+            const widthDiff  = container.clientWidth  - (holder.offsetWidth  - shifting[0]);
+            const heightDiff = container.clientHeight - (holder.offsetHeight - shifting[1]);
             return [widthDiff, heightDiff];
         }, 100);
     }
@@ -146,27 +148,111 @@ export default class AxGesture {
 
     }
 
+    
+    //
+    limitResize(status, holder, container) {
+        const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container, status.translate) || [0, 0];
 
+        // if centered
+        status.translate[0] = clamp(0, status.translate[0], widthDiff);
+        status.translate[1] = clamp(0, status.translate[1], heightDiff);
+
+        //
+        this.propFloat("--rsx", status.translate[0]);
+        this.propFloat("--rsy", status.translate[1]);
+
+        // if top-left aligned
+        //status.translate[0] = clamp(0, status.translate[0], widthDiff );
+        //status.translate[1] = clamp(0, status.translate[1], heightDiff);
+    }
 
 
     //
     limitDrag(status, holder, container) {
         const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container) || [0, 0];
 
-        //
-        const [shiftX, shiftY] = [
-            (parseFloat(holder.style.getPropertyValue("--rsx"))||0)*0.5,
-            (parseFloat(holder.style.getPropertyValue("--rsy"))||0)*0.5
-        ]
-
         // if centered
-        status.translate[0] = clamp(-widthDiff *0.5, status.translate[0] + shiftX, widthDiff *0.5) - shiftX;
-        status.translate[1] = clamp(-heightDiff*0.5, status.translate[1] + shiftY, heightDiff*0.5) - shiftY;
+        status.translate[0] = clamp(-widthDiff *0.5, status.translate[0], widthDiff *0.5);
+        status.translate[1] = clamp(-heightDiff*0.5, status.translate[1], heightDiff*0.5);
 
         // if top-left aligned
         //status.translate[0] = clamp(0, status.translate[0], widthDiff );
         //status.translate[1] = clamp(0, status.translate[1], heightDiff);
+
+        this.propFloat("--rx", status.translate[0]);
+        this.propFloat("--ry", status.translate[1]);
     }
+
+
+    //
+    resizable(options) {
+        const handler = options.handler ?? this.#holder;
+        const status = {
+            pointerId: -1,
+            translate: [
+                // @ts-ignore
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsx"))??0),
+                // @ts-ignore
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsy"))??0)
+            ]
+        }
+
+        //
+        this.#resizeStatus = status;
+
+        //
+        const dragMove = [(ev)=>{
+            if (status.pointerId == ev.pointerId) {
+                const diff = [
+                    AQ.movementX(ev.pointerId),
+                    AQ.movementY(ev.pointerId)
+                ]
+
+                //
+                const previous = [...status.translate];
+
+                //
+                status.translate[0] += diff[0];
+                status.translate[1] += diff[1];
+                this.limitResize(status, this.#holder, this.#holder.parentNode);
+
+                //
+                this.#dragStatus.translate[0] += (status.translate[0]-previous[0])/2;
+                this.#dragStatus.translate[1] += (status.translate[1]-previous[1])/2;
+                this.limitDrag(this.#dragStatus, this.#holder, this.#holder.parentNode);
+            }
+        }, { capture: true, passive: false }];
+
+        //
+        const dragEnd = [(ev)=>{
+            if (status.pointerId == ev.pointerId) {
+                status.pointerId = -1;
+
+                //
+                document.removeEventListener("pointermove", ...dragMove);
+                document.removeEventListener("pointerup", ...dragEnd);
+                document.removeEventListener("pointercancel", ...dragEnd);
+            }
+        }, { capture: true, passive: false}]
+
+        handler.addEventListener("pointerdown", (ev)=>{
+            if (status.pointerId < 0) {
+                status.pointerId = ev.pointerId
+
+                // @ts-ignore
+                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsx"))||status.translate[0]||0),
+                // @ts-ignore
+                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rsy"))||status.translate[1]||0)
+
+                //
+                document.addEventListener('pointermove', ...dragMove)
+                document.addEventListener('pointerup', ...dragEnd)
+                document.addEventListener('pointercancel', ...dragEnd)
+            }
+        }, { capture: false, passive: false });
+    }
+
+
 
     //
     draggable(options) {
@@ -175,17 +261,21 @@ export default class AxGesture {
             pointerId: -1,
             translate: [
                 // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))??0),
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))||0),
                 // @ts-ignore
-                (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))??0)
+                (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))||0)
             ]
         }
+
+        //
+        this.#dragStatus = status;
 
         //
         const dragMove = [(ev)=>{
             if (status.pointerId == ev.pointerId) {
                 status.translate[0] += AQ.movementX(ev.pointerId);
                 status.translate[1] += AQ.movementY(ev.pointerId);
+
                 this.limitDrag(status, this.#holder, this.#holder.parentNode);
             }
         }, { capture: true, passive: false }];
@@ -207,9 +297,9 @@ export default class AxGesture {
                 status.pointerId = ev.pointerId
 
                 // @ts-ignore
-                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))??status.translate[0]),
+                status.translate[0] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--rx"))||status.translate[0]||0),
                 // @ts-ignore
-                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))??status.translate[1])
+                status.translate[1] = (parseFloat(this.#holder?.style?.getPropertyValue?.("--ry"))||status.translate[1]||0)
 
                 //
                 document.addEventListener('pointermove', ...dragMove)
@@ -217,15 +307,6 @@ export default class AxGesture {
                 document.addEventListener('pointercancel', ...dragEnd)
             }
         }, { capture: false, passive: false });
-
-        //
-        Timer.rafLoop(()=>{
-            if (status.pointerId >= 0) {
-                this.limitDrag(status, this.#holder, this.#holder.parentNode);
-                this.propFloat("--rx", status.translate[0]);
-                this.propFloat("--ry", status.translate[1]);
-            }
-        }, handler);
     }
 
     //
