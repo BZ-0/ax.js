@@ -151,7 +151,10 @@ export default class AxGesture {
     
     //
     limitResize(status, holder, container) {
-        const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container, status.translate) || [0, 0];
+        const [widthDiff, heightDiff] = this.#getSizeDiff(holder, container, [
+            this.propGet("--rsx")||0,
+            this.propGet("--rsy")||0
+        ]);
 
         // if centered
         status.realTranslate[0] = clamp(0, status.translate[0], widthDiff);
