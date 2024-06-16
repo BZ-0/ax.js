@@ -192,13 +192,13 @@ export default class AxGesture {
         }, { capture: true, passive: false}]
 
         handler.addEventListener("pointerdown", (ev)=>{
-            if (status.pointerId < 0 && window.matchMedia("(width >= 10in)").matches) {
-                status.pointerId = ev.pointerId;
+            if (status.pointerId < 0 && window.matchMedia('(width >= 9in)').matches) {
+                status.pointerId = ev.pointerId
 
                 //
-                document.addEventListener("pointermove", ...dragMove);
-                document.addEventListener("pointerup", ...dragEnd);
-                document.addEventListener("pointercancel", ...dragEnd);
+                document.addEventListener('pointermove', ...dragMove)
+                document.addEventListener('pointerup', ...dragEnd)
+                document.addEventListener('pointercancel', ...dragEnd)
             }
         }, { capture: false, passive: false });
 
