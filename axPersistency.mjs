@@ -52,7 +52,7 @@ class AxPersistency {
                 unit[name] = value;
                 Array.from(subs.values()).forEach((cb)=>cb(value));
             },
-            ubsubscribe: (fx)=>{
+            unsubscribe: (fx)=>{
                 subs.delete(fx);
             },
             subscribe: (fx)=>{
@@ -79,7 +79,7 @@ class AxPersistency {
                 unit[name] = value;
                 Array.from(subs.values()).forEach((cb)=>cb(value));
             },
-            ubsubscribe: (fx)=>{
+            unsubscribe: (fx)=>{
                 subs.delete(fx);
             },
             subscribe: (fx)=>{

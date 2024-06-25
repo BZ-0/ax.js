@@ -1,6 +1,6 @@
 # 🏆 AX.js 🏆
 
-📚 Dedicated sub-framework from IDX-LX0 project... 📚
+📚 Dedicated sub-framework from IDC-LX0 project... 📚
 
 ## 🔑 Purpose 🔑
 
